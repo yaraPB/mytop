@@ -1,4 +1,7 @@
 # mytop
+
+> This assignment was provided by [Amine Abouaomar, PhD](https://www.linkedin.com/in/amine-abouaomar/?originalSubdomain=ma) at Al Akhawayn university in Ifrane as part of the CSC 3351 operating systems class for spring 2025
+
 Shell script that mimics the functionalities of the top command
 Custom System Monitor
 
