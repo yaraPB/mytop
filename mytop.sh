@@ -1,5 +1,30 @@
 #!/bin/bash
 
+# optional: defining colors
+WHITE_BG="\033[47m"
+BLACK_TXT="\033[30m"
+BLUE='\033[1;34m'  
+PURPLE='\033[0;35m'
+BLACK='\033[0;30m'
+GREY_BG='\033[48;5;235m'
+NC='\033[0m'   
+
+# the menu 
+show_help() {
+    clear
+    echo -e "${WHITE_BG}${BLACK_TXT}"
+    echo -e "Available Commands:"
+    echo "  q     Quit the application"
+    echo "  h     Display this help message"
+    echo "  SPACE Refresh immediately"
+    echo
+    echo "Press any key to return..."
+    echo -e "${NC}"
+    read -n 1 -s
+}
+
+main_application(){ 
+
 while true; do
     clear
 
@@ -12,11 +37,6 @@ cat << "EOF"
           /____/         /_/  
 
 EOF
-
-# Optional: We define the colors:
-BLUE='\033[1;34m'  
-PURPLE='\033[0;35m'
-NC='\033[0m'       
 
 # 1. Display a header showing system summary information
 # Current time and system uptime 
@@ -84,5 +104,29 @@ free -m | awk 'NR==2 || NR==3 { printf "%-8.8s %8.8s %8.8s %8.8s\n", $1, $2, $3,
 echo
 ps -eo pid,user,pri,pcpu,pmem,comm,time --sort=-pcpu | head -n 5
 
-sleep 1
+    # Refreshing the page
+   echo
+        echo -e "Commands: [SPACE] Refresh  [h] Help  [q] Quit"
+        echo -n "Input (waiting 5s): "
+
+        # waiting a max of 5s 
+        read -t 5 -n 1 input 
+
+        if [[ $? -eq 0 ]]; then 
+            case "$input" in
+                " ")
+                    continue ;; 
+                "q"|"Q")
+                    echo -e "\nExiting..."
+                    exit 0 ;;
+                "h"|"H")
+                    clear
+                    show_help ;;
+            esac
+        fi
+
 done
+
+}
+
+main_application
