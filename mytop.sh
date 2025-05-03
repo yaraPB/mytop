@@ -2,17 +2,17 @@
 
 # optional: defining colors
 WHITE_BG="\033[47m"
-BLACK_TXT="\033[30m"
-BLUE='\033[1;34m'  
-PURPLE='\033[0;35m'
-BLACK='\033[0;30m'
-GREY_BG='\033[48;5;235m'
-NC='\033[0m'   
+BLACK="\033[30m"
+BLUE="\033[1;34m"  
+PURPLE="\033[0;35m"
+YELLOW="\033[1;33m"
+GREY_BG="\033[48;5;235m"
+NC="\033[0m"   
 
 # the menu 
 show_help() {
     clear
-    echo -e "${WHITE_BG}${BLACK_TXT}"
+    echo -e "${WHITE_BG}${BLACK}"
     echo -e "Available Commands:"
     echo "  q     Quit the application"
     echo "  h     Display this help message"
@@ -55,11 +55,12 @@ printf "${BLUE}Current time:${NC} %-8s  ${BLUE}Uptime:${NC} %-10s  ${BLUE}Load(1
 "$(uptime | awk '{print $NF}')"
 
 
-
 # Total number of processes (running, sleeping, stopped)
+# in the awk, we need to pass the colors seperately 
 ps -eo stat | awk '
   BEGIN {
     BLUE = "\033[1;34m"
+    YELLOW="\033[1;33m"
     NC = "\033[0m"
     R = 0
     S = 0
@@ -78,7 +79,7 @@ ps -eo stat | awk '
 
   END {
     printf "\n%sTotal number of processes:%s %d ", BLUE, NC, total
-    printf "(Running: %d, Sleeping: %d, Stopped: %d)\n", R, S, T
+    printf "%s(Running:%s %d, %sSleeping:%s %d, %sStopped:%s %d%s)%s\n", YELLOW, NC, R, YELLOW, NC, S, YELLOW, NC, T, YELLOW, NC
   }
 '
 
@@ -87,27 +88,77 @@ ps -eo stat | awk '
 # please if you don't have it install sysstat through the following command: 
 # sudo apt install sysstat
 # for the user level is %usr and for the system level is %sys
-
-mpstat | awk '{if(NR>1) print $2, $3, $5}'
-
+echo
+mpstat | 
+awk 'BEGIN {
+  PURPLE="\033[0;35m"
+  NC="\033[0m"
+  printf PURPLE "CPU USAGE\t %-12s %-12s" NC "\n", "User Usage", "System Usage"
+}
+END {
+  printf "\t\t %-12s %-12s\n", sprintf("%.1f%%", $3*100), sprintf("%.1f%%", $5*100)
+}'
 
 # Memory usage (total, used, free)
 # this is displayed in Mi (mebibytes)
-#!/bin/bash
-
 echo
-printf "%-8.8s %8.8s %8.8s %8.8s\n" "" "total" "used" "free"
-free -m | awk 'NR==2 || NR==3 { printf "%-8.8s %8.8s %8.8s %8.8s\n", $1, $2, $3, $4 }'
+free -m | 
+awk 'BEGIN {
+  PURPLE="\033[0;35m"
+  NC="\033[0m"
+  printf PURPLE "%-12s %12s %12s %12s" NC "\n", "", "total(MiB)", "used(MiB)", "free(MiB)"
+}
+NR==2 || NR==3 {
+  printf "%-12s %12s %12s %12s\n", $1, $2, $3, $4
+}'
 
 # 2. Display a sorted list of processes with the following columns
     
-echo
-ps -eo pid,user,pri,pcpu,pmem,comm,time --sort=-pcpu | head -n 5
+# Reserve space for header, spacing, and footer (command bar)
+    height=$(tput lines)
 
-    # Refreshing the page
-   echo
-        echo -e "Commands: [SPACE] Refresh  [h] Help  [q] Quit"
-        echo -n "Input (waiting 5s): "
+echo
+
+    # Get terminal height and width using stty
+    read rows cols < <(stty size)
+
+    # Lines to reserve (command bar + padding)
+    overhead_lines=18
+    reserved=1
+    process_lines=$((rows - overhead_lines - reserved))
+
+    # Print only what fits before the last line
+ps -eo pid,user,pri,pcpu,pmem,comm,time --sort=-pcpu | awk '
+BEGIN {
+    GREEN_FG = "\033[1;32m"
+    GREY_FG  = "\033[1;30m"
+    RED_BG   = "\033[41m"
+    WHITE_BG = "\033[47m"
+    NC       = "\033[0m"
+}
+NR==1 {
+    print
+    next
+}
+{
+    cpu = $4 + 0
+    mem = $5 + 0
+
+    # Default color by user
+    fg = ($2 == "root") ? GREY_FG : GREEN_FG
+    bg = ""
+
+    # Apply background color by usage
+    if (cpu > 0.5 || mem > 0.3) bg = RED_BG
+    else if (cpu > 0.2 || mem > 0.15) bg = WHITE_BG
+
+    printf "%s%s%-5s %-10s %-5s %-5s %-5s %-20s %s%s\n", bg, fg, $1, $2, $3, $4, $5, $6, $7, NC
+}'
+
+
+    # Move cursor to bottom line using tput
+    tput cup $((rows - 1)) 0
+    echo -ne "${WHITE_BG}${BLACK}Commands: [SPACE] Refresh  [h] Help  [q] Quit${NC}"
 
         # waiting a max of 5s 
         read -t 5 -n 1 input 
@@ -117,16 +168,12 @@ ps -eo pid,user,pri,pcpu,pmem,comm,time --sort=-pcpu | head -n 5
                 " ")
                     continue ;; 
                 "q"|"Q")
-                    echo -e "\nExiting..."
                     exit 0 ;;
                 "h"|"H")
                     clear
                     show_help ;;
             esac
         fi
-
 done
-
 }
-
 main_application
