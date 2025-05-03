@@ -1,7 +1,20 @@
 #!/bin/bash
 
 while true; do
-    clear
+    clear 
+
+# Used cat instead of echo so that the '/' in the ASCII art don't get interpreted
+
+cat << "EOF"
+                    __            
+   ____ ___  __  __/ /_____  ____ 
+  / __  __ \/ / / / __/ __ \/ __ \
+ / / / / / / /_/ / /_/ /_/ / /_/ /
+/_/ /_/ /_/\__, /\__/\____/ .___/ 
+          /____/         /_/  
+
+EOF
+
 
     echo "PID USER     PRI %CPU %MEM COMMAND   TIME+"
     echo "----------------------------------------------"
