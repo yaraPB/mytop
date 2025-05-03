@@ -128,7 +128,7 @@ echo
     process_lines=$((rows - overhead_lines - reserved))
 
     # Print only what fits before the last line
-ps -eo pid,user,pri,pcpu,pmem,comm,time --sort=-pcpu | awk '
+ps -eo pid,user,pri,pcpu,pmem,comm,time --sort=-pcpu | head -n "$process_lines" | awk '
 BEGIN {
     GREEN_FG = "\033[1;32m"
     GREY_FG  = "\033[1;30m"
