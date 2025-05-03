@@ -21,14 +21,15 @@ EOF
     # echo "Current time  System uptime    Load averages:  1min 5mins  15mins "
     # echo "----------------------------------------------"
 
-echo "========= System Summary ========="
-echo
-echo "Current time     : $(uptime | awk '{print $1}')"
-echo "System uptime (hh:mm)   : $(uptime | awk '{print $2, $3}')"
-echo "Load average (1m): $(uptime | awk '{print $(NF-2)}')"
-echo "Load average (5m): $(uptime | awk '{print $(NF-1)}')"
-echo "Load average (15m): $(uptime | awk '{print $NF}')"
-echo "=================================="
+echo "---------------------- System Summary ----------------------"
+echo -e "Current time         : $(uptime | awk '{print $1}')"
+echo -e "System uptime (hh:mm): $(uptime | awk '{print $2, $3}')"
+echo -e "Load average (1m)    : $(uptime | awk '{print $(NF-2)}')"
+echo -e "Load average (5m)    : $(uptime | awk '{print $(NF-1)}')"
+echo -e "Load average (15m)   : $(uptime | awk '{print $NF}')"
+echo "-------------------------------------------------------"
+
+
 echo
 echo
 
@@ -62,6 +63,7 @@ echo
 # for the user level is %usr and for the system level is %sys
     
 echo "======== CPU usage percentage ============"
+
 mpstat | awk '{if(NR>1) print $2, $3, $5}'
 echo "=========================================="
 echo
@@ -80,7 +82,7 @@ echo "================== Active processes ===================="
 echo
 ps -eo pid,user,pri,pcpu,pmem,comm,time --sort=-pcpu | head -n 5
 echo "========================================================"
+echo 
 
 sleep 1
-
 done
