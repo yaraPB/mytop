@@ -7,6 +7,7 @@ BLUE="\033[1;34m"
 PURPLE="\033[0;35m"
 YELLOW="\033[1;33m"
 GREY_BG="\033[48;5;235m"
+GREEN = "\033[1;32m"
 NC="\033[0m"   
 
 # the menu 
@@ -34,8 +35,8 @@ cat << "EOF"
   / __  __ \/ / / / __/ __ \/ __ \
  / / / / / / /_/ / /_/ /_/ / /_/ /
 /_/ /_/ /_/\__, /\__/\____/ .___/ 
-          /____/         /_/  
-
+          /____/         /_/           
+          
 EOF
 
 # 1. Display a header showing system summary information
@@ -96,7 +97,7 @@ awk 'BEGIN {
   printf PURPLE "CPU USAGE\t %-12s %-12s" NC "\n", "User Usage", "System Usage"
 }
 END {
-  printf "\t\t %-12s %-12s\n", sprintf("%.1f%%", $3*100), sprintf("%.1f%%", $5*100)
+  printf "\t\t %-12s %-12s\n", $3, $5
 }'
 
 # Memory usage (total, used, free)
@@ -123,7 +124,7 @@ echo
     read rows cols < <(stty size)
 
     # Lines to reserve (command bar + padding)
-    overhead_lines=18
+    overhead_lines=19
     reserved=1
     process_lines=$((rows - overhead_lines - reserved))
 
@@ -135,11 +136,10 @@ BEGIN {
     RED_BG   = "\033[41m"
     WHITE_BG = "\033[47m"
     NC       = "\033[0m"
+
+     printf "%-5s %-10s %-5s %-5s %-5s %-20s %s\n", "PID", "USER", "PRI", "CPU%", "MEM%", "COMMAND", "TIME"
 }
-NR==1 {
-    print
-    next
-}
+NR==1 { next }
 {
     cpu = $4 + 0
     mem = $5 + 0
@@ -149,31 +149,30 @@ NR==1 {
     bg = ""
 
     # Apply background color by usage
-    if (cpu > 0.5 || mem > 0.3) bg = RED_BG
-    else if (cpu > 0.2 || mem > 0.15) bg = WHITE_BG
+    if (cpu > 2.5 || mem > 0.5) bg = RED_BG
+    else if (cpu > 0.5 || mem > 0.15) bg = WHITE_BG
 
     printf "%s%s%-5s %-10s %-5s %-5s %-5s %-20s %s%s\n", bg, fg, $1, $2, $3, $4, $5, $6, $7, NC
 }'
 
+# Move cursor to bottom line using tput
+tput cup $((rows - 1)) 0
+echo -ne "${WHITE_BG}${BLACK}Commands: [SPACE] Refresh  [h] Help  [q] Quit${NC}"
 
-    # Move cursor to bottom line using tput
-    tput cup $((rows - 1)) 0
-    echo -ne "${WHITE_BG}${BLACK}Commands: [SPACE] Refresh  [h] Help  [q] Quit${NC}"
+    # waiting a max of 5s 
+    read -t 5 -n 1 input 
 
-        # waiting a max of 5s 
-        read -t 5 -n 1 input 
-
-        if [[ $? -eq 0 ]]; then 
-            case "$input" in
-                " ")
-                    continue ;; 
-                "q"|"Q")
-                    exit 0 ;;
-                "h"|"H")
-                    clear
-                    show_help ;;
-            esac
-        fi
+    if [[ $? -eq 0 ]]; then 
+        case "$input" in
+            " ")
+                continue ;; 
+            "q"|"Q")
+                exit 0 ;;
+            "h"|"H")
+                clear
+                show_help ;;
+        esac
+    fi
 done
 }
 main_application
