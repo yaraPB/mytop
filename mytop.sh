@@ -172,9 +172,9 @@ echo -ne "${WHITE_BG}${BLACK}Commands: [SPACE] Refresh  [h] Help  [q] Quit${NC}"
             [mM]) SORT="pmem" ;;
             [pP]) SORT="pid"  ;;
             [tT]) SORT="time" ;;
-            "q"|"Q")
+            [qQ])
                 exit 0 ;;
-            "h"|"H")
+            [hH])
                 clear
                 show_help ;;
         esac
