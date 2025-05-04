@@ -1,28 +1,41 @@
 #!/bin/bash
 
 # optional: defining colors
-WHITE_BG="\033[47m"
-BLACK="\033[30m"
-BLUE="\033[1;34m"  
-PURPLE="\033[0;35m"
-YELLOW="\033[1;33m"
-GREY_BG="\033[48;5;235m"
-GREEN = "\033[1;32m"
-NC="\033[0m"   
+# the reason behind tput setaf is for portability
+BLACK=$(tput setaf 0)
+GREEN=$(tput setaf 2)
+NC=$(tput sgr0)
+YELLOW=$(tput setaf 3)
+BLUE=$(tput setaf 4)
+PURPLE=$(tput setaf 5)
+WHITE=$(tput setaf 7) 
+WHITE_BG=$(tput setab 7)
+# sometimes the grey background is not available
+GREY_BG=$(tput setab 235 2>/dev/null || echo "") 
+GREY=$(tput setaf 8)   
+RED_BG=$(tput setab 9)
+LIGHT_YELLOW_BG=$(tput setab 11)
 
 # the menu 
 show_help() {
     clear
     echo -e "${WHITE_BG}${BLACK}"
     echo -e "Available Commands:"
-    echo "  q     Quit the application"
-    echo "  h     Display this help message"
-    echo "  SPACE Refresh immediately"
-    echo
-    echo "Press any key to return..."
+    echo "  [q]     Quit the application"
+    echo "  [h]     Display this help message"
+    echo "  [SPACE] Refresh immediately"
+    echo "To change the sort criteria:"
+    echo "  [C]     Sort by CPU usage"
+    echo "  [M]     Sort by memory usage"
+    echo "  [P]     Sort by process ID"
+    echo "  [T]     Sort by running time"
+    echo "Press any key to return"
     echo -e "${NC}"
     read -n 1 -s
 }
+
+# for the sorting 
+SORT="pcpu"
 
 main_application(){ 
 
@@ -58,11 +71,8 @@ printf "${BLUE}Current time:${NC} %-8s  ${BLUE}Uptime:${NC} %-10s  ${BLUE}Load(1
 
 # Total number of processes (running, sleeping, stopped)
 # in the awk, we need to pass the colors seperately 
-ps -eo stat | awk '
+ps -eo stat | awk -v BLUE="$(tput setaf 4)" -v YELLOW="$(tput setaf 3)" -v NC="$(tput sgr0)" '
   BEGIN {
-    BLUE = "\033[1;34m"
-    YELLOW="\033[1;33m"
-    NC = "\033[0m"
     R = 0
     S = 0
     T = 0
@@ -90,10 +100,8 @@ ps -eo stat | awk '
 # sudo apt install sysstat
 # for the user level is %usr and for the system level is %sys
 echo
-mpstat | 
-awk 'BEGIN {
-  PURPLE="\033[0;35m"
-  NC="\033[0m"
+mpstat | awk -v PURPLE="$PURPLE" -v NC="$NC" '
+BEGIN {
   printf PURPLE "CPU USAGE\t %-12s %-12s" NC "\n", "User Usage", "System Usage"
 }
 END {
@@ -103,10 +111,8 @@ END {
 # Memory usage (total, used, free)
 # this is displayed in Mi (mebibytes)
 echo
-free -m | 
-awk 'BEGIN {
-  PURPLE="\033[0;35m"
-  NC="\033[0m"
+free -m | awk -v PURPLE="$PURPLE" -v NC="$NC" '
+BEGIN {
   printf PURPLE "%-12s %12s %12s %12s" NC "\n", "", "total(MiB)", "used(MiB)", "free(MiB)"
 }
 NR==2 || NR==3 {
@@ -128,16 +134,11 @@ echo
     reserved=1
     process_lines=$((rows - overhead_lines - reserved))
 
-    # Print only what fits before the last line
-ps -eo pid,user,pri,pcpu,pmem,comm,time --sort=-pcpu | head -n "$process_lines" | awk '
-BEGIN {
-    GREEN_FG = "\033[1;32m"
-    GREY_FG  = "\033[1;30m"
-    RED_BG   = "\033[41m"
-    WHITE_BG = "\033[47m"
-    NC       = "\033[0m"
+# Print only what fits before the last line
 
-     printf "%-5s %-10s %-5s %-5s %-5s %-20s %s\n", "PID", "USER", "PRI", "CPU%", "MEM%", "COMMAND", "TIME"
+ps -eo pid,user,pri,pcpu,pmem,comm,time --sort=-$SORT | head -n "$process_lines" | awk -v GREEN="$GREEN" -v GREY="$GREY" -v RED_BG="$RED_BG" -v LIGHT_YELLOW_BG="$LIGHT_YELLOW_BG" -v WHITE_BG="$WHITE_BG" -v BLACK="$BLACK" -v NC="$NC" '
+BEGIN {
+     printf "%s%s%-5s %-10s %-5s %-5s %-5s %-20s %s%s\n", WHITE_BG, BLACK, "PID", "USER", "PRI", "CPU%", "MEM%", "COMMAND", "TIME", NC
 }
 NR==1 { next }
 {
@@ -145,15 +146,16 @@ NR==1 { next }
     mem = $5 + 0
 
     # Default color by user
-    fg = ($2 == "root") ? GREY_FG : GREEN_FG
+    fg = ($2 == "root") ? GREY : GREEN
     bg = ""
 
     # Apply background color by usage
     if (cpu > 2.5 || mem > 0.5) bg = RED_BG
-    else if (cpu > 0.5 || mem > 0.15) bg = WHITE_BG
+    else if (cpu > 0.5 || mem > 0.15) bg = LIGHT_YELLOW_BG
 
     printf "%s%s%-5s %-10s %-5s %-5s %-5s %-20s %s%s\n", bg, fg, $1, $2, $3, $4, $5, $6, $7, NC
 }'
+
 
 # Move cursor to bottom line using tput
 tput cup $((rows - 1)) 0
@@ -166,6 +168,10 @@ echo -ne "${WHITE_BG}${BLACK}Commands: [SPACE] Refresh  [h] Help  [q] Quit${NC}"
         case "$input" in
             " ")
                 continue ;; 
+            [cC]) SORT="pcpu" ;;
+            [mM]) SORT="pmem" ;;
+            [pP]) SORT="pid"  ;;
+            [tT]) SORT="time" ;;
             "q"|"Q")
                 exit 0 ;;
             "h"|"H")
