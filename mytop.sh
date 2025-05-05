@@ -17,19 +17,23 @@ RED_BG=$(tput setab 9)
 LIGHT_YELLOW_BG=$(tput setab 11)
 
 # the menu 
+# the spaces are mainly just for padding
 show_help() {
     clear
     echo -e "${WHITE_BG}${BLACK}"
-    echo -e "Available Commands:"
-    echo "  [q]     Quit the application"
-    echo "  [h]     Display this help message"
-    echo "  [SPACE] Refresh immediately"
-    echo "To change the sort criteria:"
-    echo "  [C]     Sort by CPU usage"
-    echo "  [M]     Sort by memory usage"
-    echo "  [P]     Sort by process ID"
-    echo "  [T]     Sort by running time"
-    echo "Press any key to return"
+    echo -e " Available Commands:                "
+    echo "                                    "
+    echo "  [q]     Quit the application      "
+    echo "  [h]     Display this help message "
+    echo "  [SPACE] Refresh immediately       "
+    echo "                                    "
+    echo " To change the sort criteria:       "
+    echo "  [C]     Sort by CPU usage         "
+    echo "  [M]     Sort by memory usage      "
+    echo "  [P]     Sort by process ID        "
+    echo "  [T]     Sort by running time      "
+    echo "                                    "
+    echo "  Press any key to return           "
     echo -e "${NC}"
     read -n 1 -s
 }
@@ -138,7 +142,7 @@ echo
 
 ps -eo pid,user,pri,pcpu,pmem,comm,time --sort=-$SORT | head -n "$process_lines" | awk -v GREEN="$GREEN" -v GREY="$GREY" -v RED_BG="$RED_BG" -v LIGHT_YELLOW_BG="$LIGHT_YELLOW_BG" -v WHITE_BG="$WHITE_BG" -v BLACK="$BLACK" -v NC="$NC" '
 BEGIN {
-     printf "%s%s%-5s %-10s %-5s %-5s %-5s %-20s %s%s\n", WHITE_BG, BLACK, "PID", "USER", "PRI", "CPU%", "MEM%", "COMMAND", "TIME", NC
+     printf "%s%s%-5s %-10s %-5s %-5s %-5s %-20s %s%s\n", WHITE_BG, BLACK, "PID", "USER", "PRI", "CPU%", "MEM%", "COMMAND", "TIME    ", NC
 }
 NR==1 { next }
 {
