@@ -101,7 +101,10 @@ NR==2 || NR==3 {
 }'
 ```
 
-* Display processes infromations
+* Display processes infromations 
+
+> With user processes in **green** and background processes in **grey**
+
 ```shell
 ps -eo pid,user,pri,pcpu,pmem,comm,time --sort=-$SORT | head -n "$process_lines" | awk -v GREEN="$GREEN" -v GREY="$GREY" -v RED_BG="$RED_BG" -v LIGHT_YELLOW_BG="$LIGHT_YELLOW_BG" -v WHITE_BG="$WHITE_BG" -v BLACK="$BLACK" -v NC="$NC" '
 BEGIN {
