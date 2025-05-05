@@ -145,13 +145,13 @@ NR==1 { next }
     cpu = $4 + 0
     mem = $5 + 0
 
-    # Default color by user
+    # default colors by user
     fg = ($2 == "root") ? GREY : GREEN
     bg = ""
 
     # Apply background color by usage
-    if (cpu > 2.5 || mem > 0.5) bg = RED_BG
-    else if (cpu > 0.5 || mem > 0.15) bg = LIGHT_YELLOW_BG
+    if (cpu > 5 || mem > 1) bg = RED_BG
+    else if (cpu > 2.5 || mem > 0.5) bg = LIGHT_YELLOW_BG
 
     printf "%s%s%-5s %-10s %-5s %-5s %-5s %-20s %s%s\n", bg, fg, $1, $2, $3, $4, $5, $6, $7, NC
 }'
