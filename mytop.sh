@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # optional: defining colors
-# the reason behind tput setaf is for portability
+# the reason behind tput setaf and setab is for portability
 BLACK=$(tput setaf 0)
 GREEN=$(tput setaf 2)
 NC=$(tput sgr0)
@@ -56,15 +56,14 @@ cat << "EOF"
           
 EOF
 
+
+# when the load average is for the past 1 minute, 5 minute and 15 minutes
+# -p means pretty 
+
 # 1. Display a header showing system summary information
 # Current time and system uptime 
 # Load averages (e.g., 1min, 5min, and 15 minutes)
-
-# when the load average is for the past 1 minute, 5 minute and 15 minutes
-    # -p means pretty 
-# Define colors
-
-# Print colored metrics, white values
+# in the awk, we need to pass the colors seperately 
 printf "${BLUE}Current time:${NC} %-8s  ${BLUE}Uptime:${NC} %-10s  ${BLUE}Load(1m):${NC} %-5s  ${BLUE}Load(5m):${NC} %-5s  ${BLUE}Load(15m):${NC} %-5s\n" \
 "$(uptime | cut -d' ' -f2)" \
 "$(uptime -p | cut -d' ' -f2-)" \
@@ -74,7 +73,6 @@ printf "${BLUE}Current time:${NC} %-8s  ${BLUE}Uptime:${NC} %-10s  ${BLUE}Load(1
 
 
 # Total number of processes (running, sleeping, stopped)
-# in the awk, we need to pass the colors seperately 
 ps -eo stat | awk -v BLUE="$(tput setaf 4)" -v YELLOW="$(tput setaf 3)" -v NC="$(tput sgr0)" '
   BEGIN {
     R = 0
@@ -100,8 +98,6 @@ ps -eo stat | awk -v BLUE="$(tput setaf 4)" -v YELLOW="$(tput setaf 3)" -v NC="$
 
 
 # CPU usage percentage (user, system)
-# please if you don't have it install sysstat through the following command: 
-# sudo apt install sysstat
 # for the user level is %usr and for the system level is %sys
 echo
 mpstat | awk -v PURPLE="$PURPLE" -v NC="$NC" '
@@ -113,7 +109,7 @@ END {
 }'
 
 # Memory usage (total, used, free)
-# this is displayed in Mi (mebibytes)
+# this is displayed in MiB (mebibytes)
 echo
 free -m | awk -v PURPLE="$PURPLE" -v NC="$NC" '
 BEGIN {
@@ -130,10 +126,10 @@ NR==2 || NR==3 {
 
 echo
 
-    # Get terminal height and width using stty
+    # terminal height and width using stty
     read rows cols < <(stty size)
 
-    # Lines to reserve (command bar + padding)
+    # line count to reserve (command bar + padding)
     overhead_lines=19
     reserved=1
     process_lines=$((rows - overhead_lines - reserved))
@@ -160,12 +156,11 @@ NR==1 { next }
     printf "%s%s%-5s %-10s %-5s %-5s %-5s %-20s %s%s\n", bg, fg, $1, $2, $3, $4, $5, $6, $7, NC
 }'
 
-
-# Move cursor to bottom line using tput
+# move it to bottom line using tput
 tput cup $((rows - 1)) 0
 echo -ne "${WHITE_BG}${BLACK}Commands: [SPACE] Refresh  [h] Help  [q] Quit${NC}"
 
-    # waiting a max of 5s 
+    # refresh every 5s
     read -t 5 -n 1 input 
 
     if [[ $? -eq 0 ]]; then 
